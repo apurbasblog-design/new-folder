@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Rendering Pricing Calculator</title>
+    <style>
+        /* General Body Styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 950px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
+            display: flex;
+            gap: 32px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        /* Two main columns */
+        .image-panel, .controls-panel {
+            flex: 1 1 400px;
+            min-width: 300px;
+            box-sizing: border-box;
+        }
+
+        /* Title */
+        h2 {
+            text-align: center;
+            color: #1a202c;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        /* Form elements */
+        label {
+            display: block;
+            margin-top: 18px;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 0.9em;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e0;
+            background-color: #fff;
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23718096' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+
+        /* Result Display */
+        .result-area {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        #price-breakdown {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 15px 0;
+            font-size: 0.95em;
+        }
+        #price-breakdown li {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+        #price-breakdown li:not(:last-child) {
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        #total-price {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #0078d7;
+            margin-top: 10px;
+        }
+        
+        #discount-info {
+            color: #2e8b57;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
+            min-height: 20px;
+            font-size: 0.9em;
+        }
+
+        /* Image Grid Display */
+        .image-grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .image-grid-container img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s;
+        }
+        
+        .image-grid-container img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Lightbox and Carousel Styles */
+        .lightbox { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); justify-content: center; align-items: center; }
+        .lightbox.active { display: flex; }
+        .lightbox-content-wrapper { position: relative; display: flex; justify-content: center; align-items: center; width: 90%; height: 90%; }
+        .lightbox-content { display: block; max-width: 100%; max-height: 100%; animation: zoomIn 0.3s ease; }
+        @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .lightbox-close { position: absolute; top: -10px; right: 10px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; }
+        .carousel-control { cursor: pointer; position: absolute; top: 50%; transform: translateY(-50%); padding: 16px; color: white; font-weight: bold; font-size: 24px; user-select: none; background-color: rgba(0,0,0,0.3); }
+        .prev { left: 0; } .next { right: 0; } .carousel-control:hover { background-color: rgba(0,0,0,0.6); }
+        .slide-number { color: #f2f2f2; font-size: 14px; padding: 8px 12px; position: absolute; top: 0; left: 0; }
+
+        @media (max-width: 900px) {
+            .container { flex-direction: column; }
+            .image-grid-container img { height: auto; aspect-ratio: 4 / 3; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Column: Image and Info -->
+        <div class="image-panel">
+             <h2>Project Examples</h2>
+            <div id="image-grid" class="image-grid-container"></div>
+        </div>
+
+        <!-- Right Column: Calculator Controls -->
+        <div class="controls-panel">
+            <h2>Pricing Calculator</h2>
+            
+            <label for="type">1. Rendering Category</label>
+            <select id="type">
+                <option value="interior">Interior</option>
+                <option value="exterior">Exterior</option>
+                <option value="product">Product</option>
+            </select>
+            
+            <label for="complexity">2. Project Complexity</label>
+            <select id="complexity">
+                <option value="basic">Basic</option>
+                <option value="standard">Standard</option>
+                <option value="premium">Premium</option>
+            </select>
+            
+            <label for="quantity">3. Number of Renderings</label>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <input type="range" id="quantity" min="1" max="10" value="1" style="flex:1;">
+                <span id="quantity-display" style="font-weight:bold; min-width:20px; text-align:center; background-color:#e2e8f0; padding: 5px 10px; border-radius: 4px;">1</span>
+            </div>
+            
+            <div class="result-area">
+                <ul id="price-breakdown"></ul>
+                 <div id="discount-info"></div>
+                <div id="total-price"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Lightbox Modal with Carousel -->
+    <div id="lightbox" class="lightbox">
+        <div class="lightbox-content-wrapper">
+            <span class="lightbox-close">&times;</span>
+            <a class="carousel-control prev">&#10094;</a>
+            <img class="lightbox-content" id="lightbox-img">
+            <a class="carousel-control next">&#10095;</a>
+            <div class="slide-number" id="slide-number"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- CONFIGURATION ---
+            
+            const PRICING_CONFIG = {
+                basePrices: {
+                    interior: { basic: 400, standard: 600, premium: 800 },
+                    exterior: { basic: 500, standard: 700, premium: 1000 },
+                    product:  { basic: 150, standard: 250, premium: 400 }
+                },
+                discounts: {
+                    interior: {
+                        basic:    [ { minQty: 7, newPrice: 250 }, { minQty: 3, newPrice: 300 } ],
+                        standard: [ { minQty: 7, newPrice: 400 }, { minQty: 3, newPrice: 500 } ],
+                        premium:  [ { minQty: 7, newPrice: 550 }, { minQty: 3, newPrice: 650 } ]
+                    },
+                    exterior: {
+                        basic:    [ { minQty: 7, newPrice: 400 }, { minQty: 3, newPrice: 450 } ],
+                        standard: [ { minQty: 7, newPrice: 550 }, { minQty: 3, newPrice: 650 } ]
+                    },
+                     product: {
+                        basic:    [ { minQty: 7, newPrice: 100 }, { minQty: 3, newPrice: 120 } ],
+                        standard: [ { minQty: 7, newPrice: 150 }, { minQty: 3, newPrice: 200 } ]
+                    }
+                },
+                imagePaths: {
+                     interior: {
+                        basic:    ['images/interior-basic-1.jpg', 'images/interior-basic-2.jpg', 'images/interior-basic-3.jpg', 'images/interior-basic-4.jpg'],
+                        standard: ['images/interior-standard-1.png', 'images/interior-standard-2.png', 'images/interior-standard-3.png', 'images/interior-standard-4.png'],
+                        premium:  ['images/interior-premium-1.jpg', 'images/interior-premium-2.jpg', 'images/interior-premium-3.jpg', 'images/interior-premium-4.jpg']
+                    },
+                    exterior: {
+                        basic:    ['images/exterior-basic-1.jpg', 'images/exterior-basic-2.jpg', 'images/exterior-basic-3.jpg', 'images/exterior-basic-4.jpg'],
+                        standard: ['images/exterior-standard-1.png', 'images/exterior-standard-2.png', 'images/exterior-standard-3.png', 'images/exterior-standard-4.png'],
+                        premium:  ['images/exterior-premium-1.jpg', 'images/exterior-premium-2.jpg', 'images/exterior-premium-3.jpg', 'images/exterior-premium-4.jpg']
+                    },
+                     product: {
+                        basic:    ['images/product-basic-1.jpg', 'images/product-basic-2.jpg', 'images/product-basic-3.jpg', 'images/product-basic-4.jpg'],
+                        standard: ['images/product-standard-1.jpg', 'images/product-standard-2.jpg', 'images/product-standard-3.jpg', 'images/product-standard-4.jpg'],
+                        premium:  ['images/product-premium-1.jpg', 'images/product-premium-2.jpg', 'images/product-premium-3.jpg', 'images/product-premium-4.jpg']
+                    }
+                }
+            };
+
+            // --- DOM ELEMENTS ---
+            const allInputs = document.querySelectorAll('#type, #complexity, #quantity');
+            const imageGrid = document.getElementById('image-grid');
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            const lightboxCloseBtn = document.querySelector('.lightbox-close');
+            const prevBtn = document.querySelector('.prev');
+            const nextBtn = document.querySelector('.next');
+            const slideNumberText = document.getElementById('slide-number');
+
+            let currentImages = [];
+            let currentSlide = 0;
+
+            // --- CORE FUNCTIONS ---
+
+            function updateImageGrid() {
+                const type = document.getElementById('type').value;
+                const complexity = document.getElementById('complexity').value;
+                currentImages = PRICING_CONFIG.imagePaths[type][complexity];
+                
+                imageGrid.innerHTML = '';
+                currentImages.forEach((src, index) => {
+                    const img = document.createElement('img');
+                    img.src = src;
+                    img.alt = `${type} ${complexity} example ${index + 1}`;
+                    img.dataset.index = index;
+                    imageGrid.appendChild(img);
+                });
+            }
+
+            function calculateAndDisplay() {
+                // 1. Get values from inputs
+                const type = document.getElementById('type').value;
+                const complexity = document.getElementById('complexity').value;
+                const quantity = parseInt(document.getElementById('quantity').value, 10);
+                
+                document.getElementById('quantity-display').textContent = quantity;
+
+                // 2. Determine price per rendering
+                const basePrice = PRICING_CONFIG.basePrices[type][complexity];
+                const discountTiers = PRICING_CONFIG.discounts[type]?.[complexity] || [];
+                let pricePerRendering = basePrice;
+                let discountMsg = '';
+                
+                for (const tier of discountTiers) {
+                    if (quantity >= tier.minQty) {
+                        pricePerRendering = tier.newPrice;
+                        const savings = (basePrice - pricePerRendering) * quantity;
+                        discountMsg = `Bulk discount applied! You save $${savings.toFixed(2)}.`;
+                        break; 
+                    }
+                }
+                
+                // 3. Calculate final total
+                let finalTotal = pricePerRendering * quantity;
+                
+                // 4. Display breakdown
+                const breakdownList = document.getElementById('price-breakdown');
+                breakdownList.innerHTML = `
+                    <li><span>Price per Image</span> <span>$${pricePerRendering.toFixed(2)}</span></li>
+                    <li><span>Quantity</span> <span>&times; ${quantity}</span></li>
+                `;
+                
+                if (pricePerRendering < basePrice) {
+                    const originalPriceItem = document.createElement('li');
+                    originalPriceItem.innerHTML = `<span>Original Price</span> <span style="text-decoration: line-through;">$${basePrice.toFixed(2)}</span>`;
+                    breakdownList.prepend(originalPriceItem);
+                }
+
+                document.getElementById('discount-info').innerText = discountMsg;
+                document.getElementById('total-price').innerText = `Estimated Total: $${finalTotal.toFixed(2)}`;
+            }
+            
+            // --- UI AND EVENT HANDLERS ---
+            
+            function setupUI() {
+                allInputs.forEach(input => input.addEventListener('input', () => {
+                    if (input.id === 'type' || input.id === 'complexity') {
+                        updateImageGrid();
+                    }
+                    calculateAndDisplay();
+                }));
+                
+                imageGrid.addEventListener('click', openLightbox);
+                lightboxCloseBtn.addEventListener('click', closeLightbox);
+                prevBtn.addEventListener('click', () => changeSlide(-1));
+                nextBtn.addEventListener('click', () => changeSlide(1));
+                lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+            }
+            
+            function showSlide(index) {
+                currentSlide = (index + currentImages.length) % currentImages.length;
+                lightboxImg.src = currentImages[currentSlide];
+                slideNumberText.textContent = `${currentSlide + 1} / ${currentImages.length}`;
+            }
+            function changeSlide(n) { showSlide(currentSlide + n); }
+            function openLightbox(e) {
+                if (e.target.tagName === 'IMG') {
+                    lightbox.classList.add('active');
+                    showSlide(parseInt(e.target.dataset.index, 10));
+                }
+            }
+            function closeLightbox() { lightbox.classList.remove('active'); }
+
+            // --- INITIALIZATION ---
+            setupUI();
+            updateImageGrid();
+            calculateAndDisplay();
+        });
+    </script>
+</body>
+</html>
