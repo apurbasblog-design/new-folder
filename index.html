@@ -17,22 +17,20 @@
         /* Main Container */
         .container {
             max-width: 950px;
-            margin: 40px auto;
+            margin: 20px auto;
             background: #fff;
-            padding: 30px;
+            padding: 20px;
             border-radius: 12px;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
             display: flex;
-            gap: 32px;
-            align-items: flex-start;
-            flex-wrap: wrap;
+            flex-direction: column; /* Mobile-first: single column */
+            gap: 20px;
         }
 
         /* Two main columns */
         .image-panel, .controls-panel {
-            flex: 1 1 400px;
-            min-width: 300px;
-            box-sizing: border-box;
+            flex: 1;
+            min-width: 0; /* Allow panels to shrink */
         }
 
         /* Title */
@@ -42,6 +40,7 @@
             border-bottom: 2px solid #e2e8f0;
             padding-bottom: 10px;
             margin-top: 0;
+            font-size: 1.5em;
         }
 
         /* Form elements */
@@ -92,14 +91,11 @@
         
         /* Result Display */
         .result-area {
-            margin-top: 60px;
+            margin-top: 20px; /* Adjusted margin for mobile */
             padding: 20px;
             background-color: #f7fafc;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
         }
         #price-breakdown {
             list-style: none;
@@ -121,8 +117,8 @@
         }
 
         #total-price {
-            text-align: center;
-            font-size: 1.5em;
+            text-align: left;
+            font-size: 1.2em;
             font-weight: bold;
             color: #0078d7;
             margin-top: 10px;
@@ -136,7 +132,7 @@
         
         #main-image-display {
             width: 100%;
-            height: 250px;
+            aspect-ratio: 16 / 10;
             object-fit: cover;
             border-radius: 8px;
             border: 1px solid #ddd;
@@ -156,9 +152,6 @@
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
         }
         #timeline-title {
             font-weight: bold;
@@ -196,10 +189,28 @@
         @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .lightbox-close { position: absolute; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; }
 
-        @media (max-width: 900px) {
-            .container { flex-direction: column; }
-            #main-image-display { height: auto; aspect-ratio: 4 / 3; }
-            .additional-info, .result-area { height: auto !important; }
+        /* Tablet and larger screens */
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row; /* Two columns on larger screens */
+                align-items: flex-start;
+                gap: 32px;
+                padding: 30px;
+                margin: 40px auto;
+            }
+            .image-panel {
+                flex: 1.3;
+            }
+            .result-area {
+                margin-top: 135px; /* Restore original margin for larger screens */
+            }
+        }
+
+        /* Desktop screens */
+        @media (min-width: 1024px) {
+            h2 {
+                font-size: 1.75em;
+            }
         }
     </style>
 </head>
@@ -224,7 +235,7 @@
         <!-- Right Column: Calculator Controls -->
         <div class="controls-panel">
             <h2>Pricing Calculator</h2>
-            <label for="type">Choose Your Niche</label>
+            <label for="type">1. Choose Your Niche</label>
             <select id="type">
                 <option value="interior">Interior Rendering</option>
                 <option value="exterior">Exterior Rendering</option>
@@ -263,21 +274,21 @@
                     exterior: { basic: 300, standard: 400, premium: 600 },
                     product:  { basic: 150, standard: 250, premium: 600 }
                 },
-                imagePaths: {
+               imagePaths: {
                      interior: {
-                        basic:    'images/Interior/Small-Interior-rendering-Project-example.jpg',
-                        standard: 'images/Interior/Medium-Interior-rendering-Project-example.jpg', // Assumed path
-                        premium:  'images/Interior/Large-Interior-rendering-Project-example.jpg'  // Assumed path
+                        basic:    'https://7cgi.com/wp-content/uploads/Small-Interior-rendering-Project-example-scaled.jpg',
+                        standard: 'https://7cgi.com/wp-content/uploads/Medium-Interior-rendering-Project-example.jpg',
+                        premium:  'https://7cgi.com/wp-content/uploads/Large-Interior-rendering-Project-example.jpg'
                     },
                     exterior: {
-                        basic:    'images/Exterior/Small-Exterior-rendering-Project-example.jpg',
-                        standard: 'images/Exterior/Medium-Exterior-rendering-Project-example.jpg', // Assumed path
-                        premium:  'images/Exterior/Large-Exterior-rendering-Project-example.jpg'   // Assumed path
+                        basic:    'https://7cgi.com/wp-content/uploads/Small-Exterior-rendering-Project-example.jpg',
+                        standard: 'https://7cgi.com/wp-content/uploads/Medium-Exterior-rendering-Project-example.jpg',
+                        premium:  'https://7cgi.com/wp-content/uploads/Large-Exterior-rendering-Project-example.jpg'
                     },
                      product: {
-                        basic:    'images/Product/Small-Product-rendering-Project-example.jpg', // Corrected typo
-                        standard: 'images/Product/Medium-Product-rendering-Project-example.jpg',  // Assumed path
-                        premium:  'images/Product/Large-Product-rendering-Project-example.jpg'    // Assumed path
+                        basic:    'https://7cgi.com/wp-content/uploads/Small-Product-rendering-Project-example.jpg',
+                        standard: 'https://7cgi.com/wp-content/uploads/Medium-Product-rendering-Project-example.jpg',
+                        premium:  'https://7cgi.com/wp-content/uploads/Large-Product-rendering-Project-example.jpg'
                     }
                 }
             };
@@ -299,6 +310,11 @@
 
             // --- CORE FUNCTIONS ---
             function setEqualHeights() {
+                if (window.innerWidth < 768) {
+                    additionalInfoBox.style.height = 'auto';
+                    resultAreaBox.style.height = 'auto';
+                    return;
+                }
                 additionalInfoBox.style.height = 'auto';
                 resultAreaBox.style.height = 'auto';
                 const height1 = additionalInfoBox.offsetHeight;
@@ -335,7 +351,7 @@
                 let discountText = '';
                 const unitLabel = (type === 'product') ? 'Product' : 'Image';
 
-                // --- UPDATED DISCOUNT LOGIC ---
+                // Discount Logic
                 if (type === 'interior' || type === 'exterior') {
                     if (quantity >= 10) {
                         const discountPercent = subtotal * 0.10;
@@ -361,7 +377,7 @@
                 } else if (type === 'product') {
                     let freeUnits = 0;
                     if (quantity >= 10) {
-                        freeUnits = Math.floor(quantity / 10); // 1 free for every 10
+                        freeUnits = Math.floor(quantity / 10);
                     }
                     
                     if (freeUnits > 0) {
@@ -438,6 +454,8 @@
                 lightbox.addEventListener('click', (e) => {
                     if (e.target === lightbox) closeLightbox();
                 });
+                
+                window.addEventListener('resize', setEqualHeights);
             }
 
             // --- INITIALIZATION ---
